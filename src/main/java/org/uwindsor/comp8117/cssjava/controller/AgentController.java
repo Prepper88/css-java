@@ -3,11 +3,9 @@ package org.uwindsor.comp8117.cssjava.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.uwindsor.comp8117.cssjava.dto.Agent;
+import org.uwindsor.comp8117.cssjava.dto.LoginRequest;
 import org.uwindsor.comp8117.cssjava.enums.AgentStatus;
 import org.uwindsor.comp8117.cssjava.service.AgentService;
 
@@ -18,11 +16,12 @@ public class AgentController {
     private AgentService agentService;
 
     @PostMapping("/login")
-    public ResponseEntity<Agent> login(@RequestParam String username, @RequestParam String password) {
-        Agent agent = agentService.login(username, password);
+    public ResponseEntity<Agent> login(@RequestBody LoginRequest loginRequest) {
+        Agent agent = agentService.login(loginRequest.getUsername(), loginRequest.getPassword());
         if (agent != null) {
             // initially set offline, switch to online when socket connection is established
             agentService.updateStatus(agent.getId(), AgentStatus.OFFLINE.getValue());
+            agent.setPassword(null);
             return ResponseEntity.ok(agent);
         } else {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
