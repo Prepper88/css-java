@@ -47,7 +47,6 @@ public class NodePushService {
 
     // Notify an agent about a new session
     public void notifyNewSession(SessionView sessionView) {
-
         ResponseEntity<String> response = HttpUtil.post(NOTIFY_NEW_SESSION_URL, sessionView);
         if (!response.getStatusCode().is2xxSuccessful()) {
             throw new RuntimeException("Failed to notify agent about new session: " + response.getBody());

@@ -2,11 +2,13 @@ package org.uwindsor.comp8117.cssjava.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.uwindsor.comp8117.cssjava.dto.Customer;
 import org.uwindsor.comp8117.cssjava.dto.Message;
 import org.uwindsor.comp8117.cssjava.dto.SendMessageRequest;
 import org.uwindsor.comp8117.cssjava.dto.Session;
+import org.uwindsor.comp8117.cssjava.enums.SessionStatus;
 import org.uwindsor.comp8117.cssjava.enums.UserType;
 import org.uwindsor.comp8117.cssjava.repository.CustomerRepository;
 import org.uwindsor.comp8117.cssjava.repository.MessageRepository;
@@ -24,13 +26,21 @@ public class MessageService {
     private SessionRepository sessionRepository;
 
     @Autowired
+    @Lazy
     private TransferService transferService;
+
+    @Autowired
+    private RobotService robotService;
 
     @Autowired
     private NodePushService nodePushService;
 
     @Autowired
     private CustomerRepository customerRepository;
+
+    // -1 represents system, 0 represents robot
+    private final long SYSTEM_ID = -1L;
+    private final long ROBOT_ID = 0L;
 
     public void sendMessage(SendMessageRequest request) {
         String sessionId = request.getSessionId();
@@ -47,52 +57,81 @@ public class MessageService {
         // Push message to agent or customer
         long receiverId = -1;
         UserType receiverType = null;
-        if (UserType.AGENT.getValue().equals(request.getSenderType())) {
+        UserType senderType = UserType.getUserType(request.getSenderType());
+
+        if (UserType.AGENT == senderType) {
             receiverId = session.getCustomerId();
             receiverType = UserType.CUSTOMER;
-        } else if (UserType.CUSTOMER.getValue().equals(request.getSenderType())) {
-            receiverId = session.getAgentId();
-            if (receiverId == 0) {
+        } else if (UserType.CUSTOMER == senderType) {
+            if (session.getStatus().equals(SessionStatus.SYSTEM_PROCESSING.getValue())) {
+                receiverId = 0;
                 receiverType = UserType.SYSTEM;
             } else {
+                receiverId = session.getAgentId();
                 receiverType = UserType.AGENT;
             }
         }
-        // TODO: remove agent
         if (receiverType == UserType.SYSTEM) {
-            handleSystemCommands(session.getCustomerId(), sessionId, request.getMessage());
+            boolean isCommand = handleSystemCommands(session.getCustomerId(), sessionId, request.getMessage());
+            if (!isCommand) {
+                handleRobotMessage(session.getCustomerId(), sessionId, request.getMessage());
+            }
         } else {
-            pushMessage(sessionId, request.getSenderId(), receiverType, receiverId, message.getMessage());
+            pushMessage(sessionId, senderType, request.getSenderId(), receiverType, receiverId, message.getMessage());
         }
     }
 
-    private void pushMessage(String sessionId, long senderId, UserType receiverType, long receiverId, String message) {
-        log.info("Pushing message from {} to {}: {}, receiver type: {}", senderId, receiverId, message, receiverType);
+    private void handleRobotMessage(Long customerId, String sessionId, String message) {
+        log.info("Handling robot message: {}, customerId: {}, sessionId: {}", message, customerId, sessionId);
+        String response = robotService.handleMessage(sessionId, customerId, message);
+        saveMessage(sessionId, UserType.ROBOT, 0L, response);
+    }
+
+    private void saveMessage(String sessionId, UserType senderType, long senderId, String message) {
+        Message saveMessage = new Message();
+        saveMessage.setSessionId(sessionId);
+        saveMessage.setSenderId(senderId);
+        saveMessage.setSenderType(senderType.getValue());
+        saveMessage.setMessage(message);
+        saveMessage.setCreatedAt(LocalDateTime.now());
+        saveMessage.setUpdatedAt(LocalDateTime.now());
+        messageRepository.save(saveMessage);
+    }
+
+    public void pushMessage(String sessionId, UserType senderType, long senderId, UserType receiverType, long receiverId, String message) {
+        log.info("Pushing message from {} to {}: {}, senderType:{}, receiver type: {}", senderId, receiverId, message, senderType, receiverType);
 
         if (receiverType == UserType.AGENT) {
             Customer customer = customerRepository.findById(senderId).orElseThrow(() -> new RuntimeException("Customer not found"));
             nodePushService.sendMessageToAgent(sessionId, senderId, customer.getUsername(), receiverId, message);
         } else if (receiverType == UserType.CUSTOMER) {
-            nodePushService.sendMessageToCustomer(sessionId, senderId, "agent", receiverId, message);
+            nodePushService.sendMessageToCustomer(sessionId, senderId, senderType.getValue(), receiverId, message);
         } else {
             log.warn("Unknown receiver type: {}", receiverType);
+            return;
         }
+        saveMessage(sessionId, senderType, senderId, message);
     }
 
-    private void handleSystemCommands(long customerId, String sessionId, String message) {
+    public void pushSystemMessage(String sessionId, UserType receiverType, long receiverId, String message) {
+        pushMessage(sessionId, UserType.SYSTEM, SYSTEM_ID, receiverType, receiverId, message);
+    }
+
+    public void pushRobotMessage(String sessionId, UserType receiverType, long receiverId, String message) {
+        pushMessage(sessionId, UserType.ROBOT, ROBOT_ID, receiverType, receiverId, message);
+    }
+
+    private boolean handleSystemCommands(long customerId, String sessionId, String message) {
         log.info("Handling system command: {}, customerId: {}, sessionId: {}", message, customerId, sessionId);
-        switch (message) {
-            case "transfer to human":
-            case "T2H":
-            case "transfer to agent":
-            case "T2A":
-            case "zrg":
-            case "Live agent please":
-            case "LAP":
+        return switch (message) {
+            case "transfer to human", "T2H", "transfer to agent", "T2A", "zrg", "Live agent please", "LAP" -> {
                 transferService.transferToAgent(sessionId);
-                break;
-            default:
+                yield true;
+            }
+            default -> {
                 log.warn("Unknown system command: {}", message);
-        }
+                yield false;
+            }
+        };
     }
 }

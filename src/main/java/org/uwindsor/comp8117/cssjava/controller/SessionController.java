@@ -5,6 +5,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.uwindsor.comp8117.cssjava.dto.Session;
 import org.uwindsor.comp8117.cssjava.dto.SessionView;
+import org.uwindsor.comp8117.cssjava.enums.UserType;
+import org.uwindsor.comp8117.cssjava.service.CustomerService;
+import org.uwindsor.comp8117.cssjava.service.MessageService;
 import org.uwindsor.comp8117.cssjava.service.SessionService;
 
 import java.util.List;
@@ -15,10 +18,27 @@ public class SessionController {
     @Autowired
     private SessionService sessionService;
 
-    @PostMapping("/create")
-    public ResponseEntity<Session> createSession(@RequestParam Long customerId) {
-        Session session = sessionService.createSessionIfNotExist(customerId);
+    @Autowired
+    private MessageService messageService;
+
+    private final String WELCOME_MESSAGE = "Welcome to our service, how can I help you?";
+
+    @PostMapping("/loadOrCreate")
+    public ResponseEntity<SessionView> loadOrCreateSession(@RequestParam Long customerId) {
+        SessionView session = sessionService.loadOrCreateSession(customerId);
+
+        if (session.getMessages().isEmpty()) {
+            messageService.pushRobotMessage(session.getSessionId(), UserType.CUSTOMER, customerId, WELCOME_MESSAGE);
+        }
+
         return ResponseEntity.ok(session);
+    }
+
+
+    @PostMapping("/loadSessionForAgent")
+    public ResponseEntity<List<SessionView>> loadSessionForAgent(@RequestParam Long agentId) {
+        List<SessionView> sessions = sessionService.loadSessionForAgent(agentId);
+        return ResponseEntity.ok(sessions);
     }
 
     @PostMapping("/end")
