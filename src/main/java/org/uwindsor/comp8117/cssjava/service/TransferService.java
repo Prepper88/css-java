@@ -56,8 +56,14 @@ public class TransferService {
                 }
                 SessionView sessionView = sessionService.loadSession(sessionId);
                 nodePushService.notifyNewSession(sessionView);
+
+                // Send transfer message to customer
                 messageService.pushSystemMessage(sessionId, UserType.CUSTOMER, session.getCustomerId(), TRANSFER_SYSTEM_MESSAGE);
                 messageService.pushMessage(sessionId, UserType.AGENT, agent.getId(), UserType.CUSTOMER, sessionView.getCustomerId(), String.format(TRANSFER_AGENT_MESSAGE, agent.getId()));
+
+                // Send transfer message to agent
+                messageService.pushSystemMessage(sessionId, UserType.AGENT, session.getAgentId(), TRANSFER_SYSTEM_MESSAGE);
+                messageService.pushMessage(sessionId, UserType.AGENT, agent.getId(), UserType.AGENT, sessionView.getAgentId(), String.format(TRANSFER_AGENT_MESSAGE, agent.getId()));
                 return;
             }
         }

@@ -41,6 +41,8 @@ public class MessageService {
     // -1 represents system, 0 represents robot
     private final long SYSTEM_ID = -1L;
     private final long ROBOT_ID = 0L;
+    @Autowired
+    private SessionService sessionService;
 
     public void sendMessage(SendMessageRequest request) {
         String sessionId = request.getSessionId();
@@ -99,11 +101,10 @@ public class MessageService {
     }
 
     public void pushMessage(String sessionId, UserType senderType, long senderId, UserType receiverType, long receiverId, String message) {
-        log.info("Pushing message from {} to {}: {}, senderType:{}, receiver type: {}", senderId, receiverId, message, senderType, receiverType);
+        log.info("Pushing message from {} {} to {} {}: {}", senderType, senderId, receiverType, receiverId, message);
 
         if (receiverType == UserType.AGENT) {
-            Customer customer = customerRepository.findById(senderId).orElseThrow(() -> new RuntimeException("Customer not found"));
-            nodePushService.sendMessageToAgent(sessionId, senderId, customer.getUsername(), receiverId, message);
+            nodePushService.sendMessageToAgent(sessionId, senderId, senderType.getValue(), receiverId, message);
         } else if (receiverType == UserType.CUSTOMER) {
             nodePushService.sendMessageToCustomer(sessionId, senderId, senderType.getValue(), receiverId, message);
         } else {
@@ -126,6 +127,10 @@ public class MessageService {
         return switch (message) {
             case "transfer to human", "T2H", "transfer to agent", "T2A", "zrg", "Live agent please", "LAP" -> {
                 transferService.transferToAgent(sessionId);
+                yield true;
+            }
+            case "end session", "end", "close", "bye", "goodbye" -> {
+                sessionService.endSession(sessionId, "customer", customerId);
                 yield true;
             }
             default -> {

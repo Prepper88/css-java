@@ -19,8 +19,8 @@ public class NodePushService {
     public void sendMessageToAgent(String sessionId, Long sendId, String sendName, Long agentId, String message) {
         Map<String, Object> body = new HashMap<>();
         body.put("sessionId", sessionId);
-        body.put("sendId", sendId);
-        body.put("sendName", sendName);
+        body.put("senderId", sendId);
+        body.put("senderType", sendName);
         body.put("agentId", agentId);
         body.put("message", message);
 
@@ -31,11 +31,11 @@ public class NodePushService {
     }
 
     // Send a message to a customer
-    public void sendMessageToCustomer(String sessionId, Long sendId, String sendName, Long customerId, String message) {
+    public void sendMessageToCustomer(String sessionId, Long senderId, String senderType, Long customerId, String message) {
         Map<String, Object> body = new HashMap<>();
         body.put("sessionId", sessionId);
-        body.put("sendId", sendId);
-        body.put("sendName", sendName);
+        body.put("senderId", senderId);
+        body.put("senderType", senderType);
         body.put("customerId", customerId);
         body.put("message", message);
 
