@@ -5,7 +5,6 @@ import lombok.Getter;
 @Getter
 public enum UserType {
     AGENT("agent"),
-    SYSTEM("system"),
     CUSTOMER("customer"),
     ROBOT("robot"),
     ;

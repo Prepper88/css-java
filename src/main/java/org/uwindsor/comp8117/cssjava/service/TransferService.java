@@ -1,6 +1,7 @@
 package org.uwindsor.comp8117.cssjava.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.uwindsor.comp8117.cssjava.dto.Agent;
 import org.uwindsor.comp8117.cssjava.dto.Message;
@@ -28,6 +29,7 @@ public class TransferService {
     private NodePushService nodePushService;
 
     @Autowired
+    @Lazy
     private MessageService messageService;
 
     @Autowired
@@ -42,7 +44,7 @@ public class TransferService {
         Session session = sessionRepository.findById(sessionId).orElseThrow(() -> new RuntimeException("Session not found"));
 
         if (availableAgents.isEmpty()) {
-            messageService.pushSystemMessage(session, "No available agents");
+            messageService.pushSystemMessage(session, "No available agents, please try again later.");
             return;
         }
 

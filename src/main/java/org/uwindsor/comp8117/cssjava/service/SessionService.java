@@ -27,7 +27,7 @@ public class SessionService {
     private MessageRepository messageRepository;
 
     public SessionView loadOrCreateSession(Long customerId) {
-        Session session = sessionRepository.findByCustomerIdAndStatusIn(customerId, List.of(SessionStatus.SYSTEM_PROCESSING.getValue(), SessionStatus.AGENT_PROCESSING.getValue())).orElse(null);
+        Session session = sessionRepository.findByCustomerIdAndStatusIn(customerId, List.of(SessionStatus.ROBOT_PROCESSING.getValue(), SessionStatus.AGENT_PROCESSING.getValue())).orElse(null);
         if (session != null) {
             return loadSession(session.getSessionId());
         }
@@ -37,7 +37,7 @@ public class SessionService {
         session.setCustomerId(customerId);
         session.setAgentId(0L);
         session.setCreatedAt(LocalDateTime.now());
-        session.setStatus(SessionStatus.SYSTEM_PROCESSING.getValue());
+        session.setStatus(SessionStatus.ROBOT_PROCESSING.getValue());
         Session newSession = sessionRepository.save(session);
         return loadSession(newSession.getSessionId());
     }
@@ -50,7 +50,7 @@ public class SessionService {
     }
 
     public SessionView getActiveSessionByCustomerId(long customerId) {
-        Session session = sessionRepository.findByCustomerIdAndStatusIn(customerId, List.of(SessionStatus.AGENT_PROCESSING.getValue(), SessionStatus.SYSTEM_PROCESSING.getValue())).orElse(null);
+        Session session = sessionRepository.findByCustomerIdAndStatusIn(customerId, List.of(SessionStatus.AGENT_PROCESSING.getValue(), SessionStatus.ROBOT_PROCESSING.getValue())).orElse(null);
         if (session == null) {
             return null;
         }

@@ -23,6 +23,7 @@ public class NodePushService {
         body.put("senderId", message.getSenderId());
         body.put("senderType", message.getSenderType());
         body.put("agentId", agentId);
+        body.put("messageType", message.getMessageType());
         body.put("content", message.getContent());
 
         ResponseEntity<String> response = HttpUtil.post(AGENT_PUSH_MESSAGE_URL, body);
@@ -38,6 +39,7 @@ public class NodePushService {
         body.put("senderId", message.getSenderId());
         body.put("senderType", message.getSenderType());
         body.put("customerId", customerId);
+        body.put("messageType", message.getMessageType());
         body.put("content", message.getContent());
 
         ResponseEntity<String> response = HttpUtil.post(CUSTOMER_PUSH_MESSAGE_URL, body);

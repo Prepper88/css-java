@@ -2,7 +2,6 @@ package org.uwindsor.comp8117.cssjava.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.uwindsor.comp8117.cssjava.dto.Message;
 import org.uwindsor.comp8117.cssjava.dto.SendMessageRequest;
@@ -26,23 +25,13 @@ public class MessageService {
     private SessionRepository sessionRepository;
 
     @Autowired
-    @Lazy
-    private TransferService transferService;
-
-    @Autowired
     private RobotService robotService;
 
     @Autowired
     private NodePushService nodePushService;
 
-    @Autowired
-    private CustomerRepository customerRepository;
-
     // -1 represents system, 0 represents robot
-    private final long SYSTEM_ID = -1L;
     private final long ROBOT_ID = 0L;
-    @Autowired
-    private SessionService sessionService;
 
     public void sendMessage(SendMessageRequest request) {
         String sessionId = request.getSessionId();
@@ -67,28 +56,23 @@ public class MessageService {
             receiverId = session.getCustomerId();
             receiverType = UserType.CUSTOMER;
         } else if (UserType.CUSTOMER == senderType) {
-            if (session.getStatus().equals(SessionStatus.SYSTEM_PROCESSING.getValue())) {
+            if (session.getStatus().equals(SessionStatus.ROBOT_PROCESSING.getValue())) {
                 receiverId = 0;
-                receiverType = UserType.SYSTEM;
+                receiverType = UserType.ROBOT;
             } else {
                 receiverId = session.getAgentId();
                 receiverType = UserType.AGENT;
             }
         }
-        if (receiverType == UserType.SYSTEM) {
-            boolean isCommand = handleSystemCommands(session.getCustomerId(), sessionId, request.getContent());
-            if (!isCommand) {
-                handleRobotMessage(message);
+        if (receiverType == UserType.ROBOT) {
+            Message response = robotService.handleMessage(message);
+            if (response != null) {
+                messageRepository.save(response);
+                pushMessage(receiverType, receiverId, response);
             }
         } else {
             pushMessage(receiverType, receiverId, message);
         }
-    }
-
-    private void handleRobotMessage(Message message) {
-        log.info("Handling robot message: {}", message);
-        Message response = robotService.handleMessage(message);
-        messageRepository.save(response);
     }
 
     public void pushMessage(UserType receiverType, long receiverId, Message message) {
@@ -100,9 +84,7 @@ public class MessageService {
             nodePushService.sendMessageToCustomer(receiverId, message);
         } else {
             log.warn("Unknown receiver type: {}", receiverType);
-            return;
         }
-        messageRepository.save(message);
     }
 
     public void pushMessageToCustomerAndAgent(long customerId, long agentId, Message message) {
@@ -110,24 +92,6 @@ public class MessageService {
         messageRepository.save(message);
         nodePushService.sendMessageToAgent(agentId, message);
         nodePushService.sendMessageToCustomer(customerId, message);
-    }
-
-    private boolean handleSystemCommands(long customerId, String sessionId, String message) {
-        log.info("Handling system command: {}, customerId: {}, sessionId: {}", message, customerId, sessionId);
-        return switch (message) {
-            case "transfer to human", "T2H", "transfer to agent", "T2A", "zrg", "Live agent please", "LAP" -> {
-                transferService.transferToAgent(sessionId);
-                yield true;
-            }
-            case "end session", "end", "close", "bye", "goodbye" -> {
-                sessionService.endSession(sessionId, "customer", customerId);
-                yield true;
-            }
-            default -> {
-                log.warn("Unknown system command: {}", message);
-                yield false;
-            }
-        };
     }
 
     public void pushRobotMessage(Session session, String content) {
@@ -146,10 +110,10 @@ public class MessageService {
     public void pushSystemMessage(Session session, String content) {
         Message message = Message.builder()
                 .sessionId(session.getSessionId())
-                .senderType(UserType.SYSTEM.getValue())
-                .senderId(SYSTEM_ID)
+                .senderType(UserType.ROBOT.getValue())
+                .senderId(ROBOT_ID)
                 .content(content)
-                .messageType(MessageType.TEXT.getValue())
+                .messageType(MessageType.SYSTEM_NOTICE.getValue())
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();

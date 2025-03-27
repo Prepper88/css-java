@@ -7,6 +7,7 @@ public enum MessageType {
     TEXT("text"),
     ORDER_LIST("order-list"),
     COMMAND("command"),
+    SYSTEM_NOTICE("system-notice"),
     ;
 
     String value;

@@ -9,6 +9,7 @@ import org.uwindsor.comp8117.cssjava.dto.SessionView;
 import org.uwindsor.comp8117.cssjava.enums.UserType;
 import org.uwindsor.comp8117.cssjava.service.CustomerService;
 import org.uwindsor.comp8117.cssjava.service.MessageService;
+import org.uwindsor.comp8117.cssjava.service.RobotService;
 import org.uwindsor.comp8117.cssjava.service.SessionService;
 
 import java.util.List;
@@ -22,14 +23,16 @@ public class SessionController {
     @Autowired
     private MessageService messageService;
 
-    private final String WELCOME_MESSAGE = "Welcome to our service, how can I help you?";
+    @Autowired
+    private RobotService robotService;
 
     @PostMapping("/loadOrCreate")
     public ResponseEntity<SessionView> loadOrCreateSession(@RequestParam Long customerId) {
         SessionView sessionView = sessionService.loadOrCreateSession(customerId);
 
         if (sessionView.getMessages().isEmpty()) {
-            messageService.pushSystemMessage(sessionView.toSession(), WELCOME_MESSAGE);
+            Message message = robotService.pushWelcomeMessage(sessionView.toSession(), customerId);
+            sessionView.getMessages().add(message);
         }
 
         return ResponseEntity.ok(sessionView);

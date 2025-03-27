@@ -4,7 +4,7 @@ import lombok.Getter;
 
 @Getter
 public enum SessionStatus {
-    SYSTEM_PROCESSING("system_processing"),
+    ROBOT_PROCESSING("system_processing"),
     AGENT_PROCESSING("agent_processing"),
     ENDED("ended");
 
