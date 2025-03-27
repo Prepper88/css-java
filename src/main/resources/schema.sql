@@ -57,7 +57,8 @@ DROP TABLE IF EXISTS `message`;
 CREATE TABLE `message` (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `created_at` datetime(6) DEFAULT NULL,
-  `message` varchar(255) DEFAULT NULL,
+  `message_type` varchar(255) DEFAULT NULL,
+  `content` varchar(255) DEFAULT NULL,
   `sender_id` bigint DEFAULT NULL,
   `sender_type` varchar(255) DEFAULT NULL,
   `session_id` varchar(255) DEFAULT NULL,

@@ -4,10 +4,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
-import org.uwindsor.comp8117.cssjava.dto.Customer;
 import org.uwindsor.comp8117.cssjava.dto.Message;
 import org.uwindsor.comp8117.cssjava.dto.SendMessageRequest;
 import org.uwindsor.comp8117.cssjava.dto.Session;
+import org.uwindsor.comp8117.cssjava.enums.MessageType;
 import org.uwindsor.comp8117.cssjava.enums.SessionStatus;
 import org.uwindsor.comp8117.cssjava.enums.UserType;
 import org.uwindsor.comp8117.cssjava.repository.CustomerRepository;
@@ -47,13 +47,15 @@ public class MessageService {
     public void sendMessage(SendMessageRequest request) {
         String sessionId = request.getSessionId();
         Session session = sessionRepository.findById(sessionId).orElseThrow(() -> new RuntimeException("Session not found"));
-        Message message = new Message();
-        message.setSessionId(sessionId);
-        message.setSenderId(request.getSenderId());
-        message.setSenderType(request.getSenderType());
-        message.setMessage(request.getMessage());
-        message.setCreatedAt(LocalDateTime.now());
-        message.setUpdatedAt(LocalDateTime.now());
+        Message message = Message.builder()
+                .sessionId(sessionId)
+                .senderId(request.getSenderId())
+                .senderType(request.getSenderType())
+                .content(request.getContent())
+                .messageType(request.getMessageType())
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
         messageRepository.save(message);
 
         // Push message to agent or customer
@@ -74,52 +76,40 @@ public class MessageService {
             }
         }
         if (receiverType == UserType.SYSTEM) {
-            boolean isCommand = handleSystemCommands(session.getCustomerId(), sessionId, request.getMessage());
+            boolean isCommand = handleSystemCommands(session.getCustomerId(), sessionId, request.getContent());
             if (!isCommand) {
-                handleRobotMessage(session.getCustomerId(), sessionId, request.getMessage());
+                handleRobotMessage(message);
             }
         } else {
-            pushMessage(sessionId, senderType, request.getSenderId(), receiverType, receiverId, message.getMessage());
+            pushMessage(receiverType, receiverId, message);
         }
     }
 
-    private void handleRobotMessage(Long customerId, String sessionId, String message) {
-        log.info("Handling robot message: {}, customerId: {}, sessionId: {}", message, customerId, sessionId);
-        String response = robotService.handleMessage(sessionId, customerId, message);
-        saveMessage(sessionId, UserType.ROBOT, 0L, response);
+    private void handleRobotMessage(Message message) {
+        log.info("Handling robot message: {}", message);
+        Message response = robotService.handleMessage(message);
+        messageRepository.save(response);
     }
 
-    private void saveMessage(String sessionId, UserType senderType, long senderId, String message) {
-        Message saveMessage = new Message();
-        saveMessage.setSessionId(sessionId);
-        saveMessage.setSenderId(senderId);
-        saveMessage.setSenderType(senderType.getValue());
-        saveMessage.setMessage(message);
-        saveMessage.setCreatedAt(LocalDateTime.now());
-        saveMessage.setUpdatedAt(LocalDateTime.now());
-        messageRepository.save(saveMessage);
-    }
-
-    public void pushMessage(String sessionId, UserType senderType, long senderId, UserType receiverType, long receiverId, String message) {
-        log.info("Pushing message from {} {} to {} {}: {}", senderType, senderId, receiverType, receiverId, message);
+    public void pushMessage(UserType receiverType, long receiverId, Message message) {
+        log.info("Pushing message to {} {}: {}", receiverType, receiverId, message);
 
         if (receiverType == UserType.AGENT) {
-            nodePushService.sendMessageToAgent(sessionId, senderId, senderType.getValue(), receiverId, message);
+            nodePushService.sendMessageToAgent(receiverId, message);
         } else if (receiverType == UserType.CUSTOMER) {
-            nodePushService.sendMessageToCustomer(sessionId, senderId, senderType.getValue(), receiverId, message);
+            nodePushService.sendMessageToCustomer(receiverId, message);
         } else {
             log.warn("Unknown receiver type: {}", receiverType);
             return;
         }
-        saveMessage(sessionId, senderType, senderId, message);
+        messageRepository.save(message);
     }
 
-    public void pushSystemMessage(String sessionId, UserType receiverType, long receiverId, String message) {
-        pushMessage(sessionId, UserType.SYSTEM, SYSTEM_ID, receiverType, receiverId, message);
-    }
-
-    public void pushRobotMessage(String sessionId, UserType receiverType, long receiverId, String message) {
-        pushMessage(sessionId, UserType.ROBOT, ROBOT_ID, receiverType, receiverId, message);
+    public void pushMessageToCustomerAndAgent(long customerId, long agentId, Message message) {
+        log.info("Pushing message to customer: {}, agent: {}, message: {}", customerId, agentId, message);
+        messageRepository.save(message);
+        nodePushService.sendMessageToAgent(agentId, message);
+        nodePushService.sendMessageToCustomer(customerId, message);
     }
 
     private boolean handleSystemCommands(long customerId, String sessionId, String message) {
@@ -138,5 +128,37 @@ public class MessageService {
                 yield false;
             }
         };
+    }
+
+    public void pushRobotMessage(Session session, String content) {
+        Message message = Message.builder()
+                .sessionId(session.getSessionId())
+                .senderType(UserType.ROBOT.getValue())
+                .senderId(ROBOT_ID)
+                .content(content)
+                .messageType(MessageType.TEXT.getValue())
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
+        nodePushService.sendMessageToCustomer(session.getCustomerId(), message);
+    }
+
+    public void pushSystemMessage(Session session, String content) {
+        Message message = Message.builder()
+                .sessionId(session.getSessionId())
+                .senderType(UserType.SYSTEM.getValue())
+                .senderId(SYSTEM_ID)
+                .content(content)
+                .messageType(MessageType.TEXT.getValue())
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
+
+        messageRepository.save(message);
+        nodePushService.sendMessageToCustomer(session.getCustomerId(), message);
+
+        if (session.getStatus().equals(SessionStatus.AGENT_PROCESSING.getValue())) {
+            nodePushService.sendMessageToAgent(session.getAgentId(), message);
+        }
     }
 }

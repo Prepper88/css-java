@@ -2,6 +2,7 @@ package org.uwindsor.comp8117.cssjava.service;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.uwindsor.comp8117.cssjava.dto.Message;
 import org.uwindsor.comp8117.cssjava.dto.SessionView;
 import org.uwindsor.comp8117.cssjava.util.HttpUtil;
 
@@ -16,13 +17,13 @@ public class NodePushService {
     private static final String NOTIFY_NEW_SESSION_URL = "http://localhost:3001/api/notify-new-session";
 
     // Send a message to an agent
-    public void sendMessageToAgent(String sessionId, Long sendId, String sendName, Long agentId, String message) {
+    public void sendMessageToAgent(Long agentId, Message message) {
         Map<String, Object> body = new HashMap<>();
-        body.put("sessionId", sessionId);
-        body.put("senderId", sendId);
-        body.put("senderType", sendName);
+        body.put("sessionId", message.getSessionId());
+        body.put("senderId", message.getSenderId());
+        body.put("senderType", message.getSenderType());
         body.put("agentId", agentId);
-        body.put("message", message);
+        body.put("content", message.getContent());
 
         ResponseEntity<String> response = HttpUtil.post(AGENT_PUSH_MESSAGE_URL, body);
         if (!response.getStatusCode().is2xxSuccessful()) {
@@ -31,13 +32,13 @@ public class NodePushService {
     }
 
     // Send a message to a customer
-    public void sendMessageToCustomer(String sessionId, Long senderId, String senderType, Long customerId, String message) {
+    public void sendMessageToCustomer(Long customerId, Message message) {
         Map<String, Object> body = new HashMap<>();
-        body.put("sessionId", sessionId);
-        body.put("senderId", senderId);
-        body.put("senderType", senderType);
+        body.put("sessionId", message.getSessionId());
+        body.put("senderId", message.getSenderId());
+        body.put("senderType", message.getSenderType());
         body.put("customerId", customerId);
-        body.put("message", message);
+        body.put("content", message.getContent());
 
         ResponseEntity<String> response = HttpUtil.post(CUSTOMER_PUSH_MESSAGE_URL, body);
         if (!response.getStatusCode().is2xxSuccessful()) {

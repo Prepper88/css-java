@@ -3,6 +3,7 @@ package org.uwindsor.comp8117.cssjava.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.uwindsor.comp8117.cssjava.dto.Message;
 import org.uwindsor.comp8117.cssjava.dto.Session;
 import org.uwindsor.comp8117.cssjava.dto.SessionView;
 import org.uwindsor.comp8117.cssjava.enums.UserType;
@@ -25,13 +26,13 @@ public class SessionController {
 
     @PostMapping("/loadOrCreate")
     public ResponseEntity<SessionView> loadOrCreateSession(@RequestParam Long customerId) {
-        SessionView session = sessionService.loadOrCreateSession(customerId);
+        SessionView sessionView = sessionService.loadOrCreateSession(customerId);
 
-        if (session.getMessages().isEmpty()) {
-            messageService.pushRobotMessage(session.getSessionId(), UserType.CUSTOMER, customerId, WELCOME_MESSAGE);
+        if (sessionView.getMessages().isEmpty()) {
+            messageService.pushSystemMessage(sessionView.toSession(), WELCOME_MESSAGE);
         }
 
-        return ResponseEntity.ok(session);
+        return ResponseEntity.ok(sessionView);
     }
 
 

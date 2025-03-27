@@ -7,5 +7,6 @@ public class SendMessageRequest {
     private String sessionId;
     private Long senderId;
     private String senderType;
-    private String message;
+    private String content;
+    private String messageType;
 }

@@ -15,4 +15,13 @@ public class SessionView {
     private String customerName;
     private String status;
     private List<Message> messages;
+
+    public Session toSession() {
+        Session session = new Session();
+        session.setSessionId(sessionId);
+        session.setAgentId(agentId);
+        session.setCustomerId(customerId);
+        session.setStatus(status);
+        return session;
+    }
 }
