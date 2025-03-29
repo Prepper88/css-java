@@ -31,7 +31,7 @@ UNLOCK TABLES;
 
 LOCK TABLES `customer` WRITE;
 /*!40000 ALTER TABLE `customer` DISABLE KEYS */;
-INSERT INTO `customer` VALUES (1,'202cb962ac59075b964b07152d234b70','yyy'),(2,'202cb962ac59075b964b07152d234b70','chase'),(3,'202cb962ac59075b964b07152d234b70','lzj'),(4,'202cb962ac59075b964b07152d234b70','ztf');
+INSERT INTO `customer` VALUES (1,'202cb962ac59075b964b07152d234b70','yyy', 'Yuanyuan Yang', '+1 2387652345', 'yuanyuan.yang@uwindsor.ca', '2000-01-01'),(2,'202cb962ac59075b964b07152d234b70','chase', 'Chase Shen', '+1 2387652345', 'chase.shen@uwindsor.ca', '2000-01-02'),(3,'202cb962ac59075b964b07152d234b70','lzj', 'Ziji Liu', '+1 2387652345', 'ziji.liu@uwindsor.ca', '2000-01-03'),(4,'202cb962ac59075b964b07152d234b70','ztf', 'Tengfei Zhu', '+1 2387652345', 'tengfei.zhu@uwindsor.ca', '2000-01-04');
 /*!40000 ALTER TABLE `customer` ENABLE KEYS */;
 UNLOCK TABLES;
 
