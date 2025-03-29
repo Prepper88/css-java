@@ -3,10 +3,7 @@ package org.uwindsor.comp8117.cssjava.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
-import org.uwindsor.comp8117.cssjava.dto.Agent;
-import org.uwindsor.comp8117.cssjava.dto.Message;
-import org.uwindsor.comp8117.cssjava.dto.Session;
-import org.uwindsor.comp8117.cssjava.dto.SessionView;
+import org.uwindsor.comp8117.cssjava.dto.*;
 import org.uwindsor.comp8117.cssjava.enums.AgentStatus;
 import org.uwindsor.comp8117.cssjava.enums.MessageType;
 import org.uwindsor.comp8117.cssjava.enums.SessionStatus;
@@ -37,11 +34,31 @@ public class TransferService {
 
     private final String TRANSFER_SYSTEM_MESSAGE = "You are now connected to an agent";
     private final String TRANSFER_AGENT_MESSAGE = "Hello! This is Agent 00%d. I’ll be assisting you today. How can I help?";
+    @Autowired
+    private OrderService orderService;
 
     public void transferToAgent(String sessionId) {
-        List<Agent> availableAgents = agentRepository.findByStatus(AgentStatus.AVAILABLE.getValue());
-
         Session session = sessionRepository.findById(sessionId).orElseThrow(() -> new RuntimeException("Session not found"));
+        if (checkOrder(session)) {
+            doTransfer(session);
+        }
+    }
+
+    public boolean checkOrder(Session session) {
+        if (session.getOrderId() == null) {
+            List<OrderCard> orderCards = orderService.findOrderCardsByCustomerId(session.getCustomerId());
+            if (orderCards == null || orderCards.isEmpty()) {
+                return true;
+            }
+            // push order card list to customer
+            messageService.pushOrderCards(session, orderCards);
+            return false;
+        }
+        return true;
+    }
+
+    public void doTransfer(Session session) {
+        List<Agent> availableAgents = agentRepository.findByStatus(AgentStatus.AVAILABLE.getValue());
 
         if (availableAgents.isEmpty()) {
             messageService.pushSystemMessage(session, "No available agents, please try again later.");
@@ -59,13 +76,13 @@ public class TransferService {
                     agent.setStatus(AgentStatus.BUSY.getValue());
                     agentRepository.save(agent);
                 }
-                SessionView sessionView = sessionService.loadSession(sessionId);
+                SessionView sessionView = sessionService.loadSession(session.getSessionId());
                 nodePushService.notifyNewSession(sessionView);
 
                 // Send transfer message
                 messageService.pushSystemMessage(session, TRANSFER_SYSTEM_MESSAGE);
                 Message message = Message.builder()
-                        .sessionId(sessionId)
+                        .sessionId(session.getSessionId())
                         .senderType(UserType.AGENT.getValue())
                         .senderId(agent.getId())
                         .messageType(MessageType.TEXT.getValue())

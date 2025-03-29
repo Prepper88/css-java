@@ -16,4 +16,5 @@ public class Session {
     private String status;
     private String endedBy;
     private Long endedById;
+    private String orderId;
 }

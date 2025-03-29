@@ -6,6 +6,7 @@ import lombok.Getter;
 public enum MessageType {
     TEXT("text"),
     ORDER_LIST("order-list"),
+    ORDER_CARD("order-card"),
     COMMAND("command"),
     SYSTEM_NOTICE("system-notice"),
     ;

@@ -1,5 +1,6 @@
 package org.uwindsor.comp8117.cssjava.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.uwindsor.comp8117.cssjava.dto.Message;
@@ -10,6 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Service
+@Slf4j
 public class NodePushService {
 
     private static final String AGENT_PUSH_MESSAGE_URL = "http://localhost:3001/api/push-message";
@@ -26,9 +28,13 @@ public class NodePushService {
         body.put("messageType", message.getMessageType());
         body.put("content", message.getContent());
 
-        ResponseEntity<String> response = HttpUtil.post(AGENT_PUSH_MESSAGE_URL, body);
-        if (!response.getStatusCode().is2xxSuccessful()) {
-            throw new RuntimeException("Failed to send message to agent: " + response.getBody());
+        try {
+            ResponseEntity<String> response = HttpUtil.post(AGENT_PUSH_MESSAGE_URL, body);
+            if (!response.getStatusCode().is2xxSuccessful()) {
+                log.warn("Failed to send message to agent: {}", response.getBody());
+            }
+        } catch (Exception e) {
+            log.warn("Failed to send message to agent: {}", e.getMessage());
         }
     }
 

@@ -15,6 +15,7 @@ public class SessionView {
     private String customerName;
     private String status;
     private List<Message> messages;
+    private OrderCard orderCard;
 
     public Session toSession() {
         Session session = new Session();
@@ -22,6 +23,9 @@ public class SessionView {
         session.setAgentId(agentId);
         session.setCustomerId(customerId);
         session.setStatus(status);
+        if (orderCard != null) {
+            session.setOrderId(orderCard.getOrderId());
+        }
         return session;
     }
 }

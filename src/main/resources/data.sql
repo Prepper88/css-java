@@ -44,6 +44,13 @@ LOCK TABLES `message` WRITE;
 /*!40000 ALTER TABLE `message` ENABLE KEYS */;
 UNLOCK TABLES;
 
+LOCK TABLES `orders` WRITE;
+/*!40000 ALTER TABLE `orders` DISABLE KEYS */;
+INSERT INTO css_java.orders (created_at, customer_id, id, image_name, order_id, order_title, price, pay_status, delivery_status) VALUES ('2025-03-27 16:30:53.000000', 1, 1, 'cake.png', '123456789', 'A tasty cake', '134.5', 'paid', 'delivered');
+INSERT INTO css_java.orders (created_at, customer_id, id, image_name, order_id, order_title, price, pay_status, delivery_status) VALUES ('2025-03-28 10:40:12.000000', 1, 2, 'apple.png', '3281923', 'Apples', '23.00', 'unpaid', 'undelivered');
+/*!40000 ALTER TABLE `orders` ENABLE KEYS */;
+UNLOCK TABLES;
+
 --
 -- Dumping data for table `session`
 --

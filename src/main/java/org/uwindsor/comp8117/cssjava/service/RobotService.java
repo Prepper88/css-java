@@ -1,13 +1,18 @@
 package org.uwindsor.comp8117.cssjava.service;
 
+import com.google.gson.Gson;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.uwindsor.comp8117.cssjava.dto.Message;
+import org.uwindsor.comp8117.cssjava.dto.OrderCard;
 import org.uwindsor.comp8117.cssjava.dto.Session;
+import org.uwindsor.comp8117.cssjava.dto.SessionView;
 import org.uwindsor.comp8117.cssjava.enums.MessageType;
 import org.uwindsor.comp8117.cssjava.enums.UserType;
 import org.uwindsor.comp8117.cssjava.repository.MessageRepository;
+import org.uwindsor.comp8117.cssjava.repository.SessionRepository;
 
 import java.time.LocalDateTime;
 
@@ -27,8 +32,14 @@ public class RobotService {
     private final long ROBOT_ID = 0L;
 
     private final String WELCOME_MESSAGE = "Welcome to our service, how can I help you?";
+
+    @Autowired
+    private Gson gson;
+
     @Autowired
     private MessageRepository messageRepository;
+    @Autowired
+    private SessionRepository sessionRepository;
 
     public Message handleMessage(Message message) {
         if (handleSystemCommands(message)) {
@@ -75,6 +86,14 @@ public class RobotService {
         long customerId = message.getSenderId();
         String content = message.getContent();
         log.info("Handling system command: {}, customerId: {}, sessionId: {}", message, customerId, sessionId);
+        if ( MessageType.ORDER_CARD.getValue().equals(message.getMessageType())) {
+            SessionView sessionView = sessionService.loadSession(sessionId);
+            sessionView.setOrderCard(buildOrderCard(message));
+            sessionRepository.save(sessionView.toSession());
+            nodePushService.sendMessageToAgent(sessionView.getAgentId(), message);
+            transferService.transferToAgent(sessionId);
+            return true;
+        }
         return switch (content) {
             case "transfer to human", "T2H", "transfer to agent", "T2A", "zrg", "Live agent please", "LAP" -> {
                 transferService.transferToAgent(sessionId);
@@ -89,5 +108,9 @@ public class RobotService {
                 yield false;
             }
         };
+    }
+
+    private OrderCard buildOrderCard(Message message) {
+        return gson.fromJson(message.getContent(), OrderCard.class);
     }
 }

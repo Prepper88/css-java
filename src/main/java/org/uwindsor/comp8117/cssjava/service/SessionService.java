@@ -2,13 +2,11 @@ package org.uwindsor.comp8117.cssjava.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.uwindsor.comp8117.cssjava.dto.Customer;
-import org.uwindsor.comp8117.cssjava.dto.Message;
-import org.uwindsor.comp8117.cssjava.dto.Session;
-import org.uwindsor.comp8117.cssjava.dto.SessionView;
+import org.uwindsor.comp8117.cssjava.dto.*;
 import org.uwindsor.comp8117.cssjava.enums.SessionStatus;
 import org.uwindsor.comp8117.cssjava.repository.CustomerRepository;
 import org.uwindsor.comp8117.cssjava.repository.MessageRepository;
+import org.uwindsor.comp8117.cssjava.repository.OrderRepository;
 import org.uwindsor.comp8117.cssjava.repository.SessionRepository;
 
 import java.time.LocalDateTime;
@@ -25,6 +23,11 @@ public class SessionService {
 
     @Autowired
     private MessageRepository messageRepository;
+
+    @Autowired
+    private OrderRepository orderRepository;
+    @Autowired
+    private OrderService orderService;
 
     public SessionView loadOrCreateSession(Long customerId) {
         Session session = sessionRepository.findByCustomerIdAndStatusIn(customerId, List.of(SessionStatus.ROBOT_PROCESSING.getValue(), SessionStatus.AGENT_PROCESSING.getValue())).orElse(null);
@@ -46,7 +49,11 @@ public class SessionService {
         Session session = sessionRepository.findById(sessionId).orElseThrow(() -> new RuntimeException("Session not found"));
         Customer customer = customerRepository.findById(session.getCustomerId()).orElseThrow(() -> new RuntimeException("Customer not found"));
         List<Message> messages = messageRepository.findBySessionId(sessionId);
-        return buildSessionView(session, customer, messages);
+        OrderCard orderCard = null;
+        if (session.getOrderId() != null) {
+            orderCard = orderService.findOrderCardByOrderId(session.getOrderId());
+        }
+        return buildSessionView(session, customer, messages, orderCard);
     }
 
     public SessionView getActiveSessionByCustomerId(long customerId) {
@@ -56,7 +63,11 @@ public class SessionService {
         }
         Customer customer = customerRepository.findById(session.getCustomerId()).orElseThrow(() -> new RuntimeException("Customer not found"));
         List<Message> messages = messageRepository.findBySessionId(session.getSessionId());
-        return buildSessionView(session, customer, messages);
+        OrderCard orderCard = null;
+        if (session.getOrderId() != null) {
+            orderCard = orderService.findOrderCardByOrderId(session.getOrderId());
+        }
+        return buildSessionView(session, customer, messages, orderCard);
     }
 
     public List<SessionView> getActiveSessionsByAgentId(long agentId) {
@@ -64,7 +75,7 @@ public class SessionService {
         return sessions.stream().map(session -> loadSession(session.getSessionId())).toList();
     }
 
-    private SessionView buildSessionView(Session session, Customer customer, List<Message> messages) {
+    private SessionView buildSessionView(Session session, Customer customer, List<Message> messages, OrderCard orderCard) {
         SessionView sessionView = new SessionView();
         sessionView.setSessionId(session.getSessionId());
         sessionView.setCustomerId(session.getCustomerId());
@@ -72,6 +83,7 @@ public class SessionService {
         sessionView.setCustomerName(customer.getUsername());
         sessionView.setStatus(session.getStatus());
         sessionView.setMessages(messages);
+        sessionView.setOrderCard(orderCard);
         return sessionView;
 
     }

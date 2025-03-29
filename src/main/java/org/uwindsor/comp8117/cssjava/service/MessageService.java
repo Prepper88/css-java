@@ -1,11 +1,10 @@
 package org.uwindsor.comp8117.cssjava.service;
 
+import com.google.gson.Gson;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.uwindsor.comp8117.cssjava.dto.Message;
-import org.uwindsor.comp8117.cssjava.dto.SendMessageRequest;
-import org.uwindsor.comp8117.cssjava.dto.Session;
+import org.uwindsor.comp8117.cssjava.dto.*;
 import org.uwindsor.comp8117.cssjava.enums.MessageType;
 import org.uwindsor.comp8117.cssjava.enums.SessionStatus;
 import org.uwindsor.comp8117.cssjava.enums.UserType;
@@ -14,6 +13,7 @@ import org.uwindsor.comp8117.cssjava.repository.MessageRepository;
 import org.uwindsor.comp8117.cssjava.repository.SessionRepository;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @Slf4j
@@ -30,7 +30,9 @@ public class MessageService {
     @Autowired
     private NodePushService nodePushService;
 
-    // -1 represents system, 0 represents robot
+    @Autowired
+    private Gson gson;
+
     private final long ROBOT_ID = 0L;
 
     public void sendMessage(SendMessageRequest request) {
@@ -124,5 +126,23 @@ public class MessageService {
         if (session.getStatus().equals(SessionStatus.AGENT_PROCESSING.getValue())) {
             nodePushService.sendMessageToAgent(session.getAgentId(), message);
         }
+    }
+
+    public void pushOrderCards(Session session, List<OrderCard> orderCards) {
+        OrderCardListMessageBody orderCardListMessageBody = OrderCardListMessageBody.builder()
+                .messageTitle("Please choose the order you want to consult:")
+                .orderCards(orderCards)
+                .build();
+        Message message = Message.builder()
+                .sessionId(session.getSessionId())
+                .senderType(UserType.ROBOT.getValue())
+                .senderId(ROBOT_ID)
+                .content(gson.toJson(orderCardListMessageBody))
+                .messageType(MessageType.ORDER_LIST.getValue())
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
+        messageRepository.save(message);
+        nodePushService.sendMessageToCustomer(session.getCustomerId(), message);
     }
 }

@@ -58,7 +58,7 @@ CREATE TABLE `message` (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `created_at` datetime(6) DEFAULT NULL,
   `message_type` varchar(255) DEFAULT NULL,
-  `content` varchar(255) DEFAULT NULL,
+  `content` varchar(4096) DEFAULT NULL,
   `sender_id` bigint DEFAULT NULL,
   `sender_type` varchar(255) DEFAULT NULL,
   `session_id` varchar(255) DEFAULT NULL,
@@ -79,11 +79,29 @@ CREATE TABLE `session` (
   `agent_id` bigint DEFAULT NULL,
   `created_at` datetime(6) DEFAULT NULL,
   `customer_id` bigint DEFAULT NULL,
+  `order_id` varchar(255) DEFAULT NULL,
   `ended_by` varchar(255) DEFAULT NULL,
   `ended_by_id` bigint DEFAULT NULL,
   `status` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`session_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+DROP TABLE IF EXISTS `orders`;
+create table css_java.orders
+(
+    created_at  datetime(6)  null,
+    customer_id bigint       null,
+    id          bigint auto_increment
+        primary key,
+    image_name  varchar(255) null,
+    order_id    varchar(255) null,
+    order_title varchar(255) null,
+    price       varchar(255) null,
+    pay_status      varchar(255) null,
+    delivery_status      varchar(255) null
+);
+
+
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
