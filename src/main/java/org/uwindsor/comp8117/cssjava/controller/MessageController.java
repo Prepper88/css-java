@@ -17,4 +17,10 @@ public class MessageController {
         messageService.sendMessage(request);
         return ResponseEntity.ok().build();
     }
+
+    @GetMapping("/send-service-progress-card")
+    public ResponseEntity<Void> sendServiceProgressCard(@RequestParam String sessionId) {
+        messageService.sendServiceProgressCard(sessionId);
+        return ResponseEntity.ok().build();
+    }
 }

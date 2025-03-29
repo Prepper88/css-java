@@ -105,4 +105,16 @@ public class TicketService {
         }
         return ticketRepository.save(ticket);
     }
+
+    public String getServiceProgress(String sessionId) {
+        SessionView sessionView = sessionService.loadSession(sessionId);
+        if (sessionView != null) {
+            long ticketId = sessionView.getTicketId();
+            Ticket ticket = ticketRepository.findById(ticketId);
+            if (ticket != null) {
+                return ticket.getStatus();
+            }
+        }
+        return null;
+    }
 }

@@ -22,4 +22,10 @@ public class TicketController {
     public Ticket addOrUpdateTicket(@RequestBody Ticket ticket) {
         return ticketService.addOrUpdateTicket(ticket);
     }
+
+    @PostMapping("/get-service-progress")
+    public String getServiceProgress(@RequestParam String sessionId) {
+        return ticketService.getServiceProgress(sessionId);
+    }
+
 }

@@ -34,6 +34,8 @@ public class MessageService {
     private Gson gson;
 
     private final long ROBOT_ID = 0L;
+    @Autowired
+    private TicketService ticketService;
 
     public void sendMessage(SendMessageRequest request) {
         String sessionId = request.getSessionId();
@@ -144,5 +146,29 @@ public class MessageService {
                 .build();
         messageRepository.save(message);
         nodePushService.sendMessageToCustomer(session.getCustomerId(), message);
+    }
+
+    public void sendServiceProgressCard(String sessionId) {
+        if (sessionId == null) {
+            return;
+        }
+        Session session = sessionRepository.findById(sessionId).orElseThrow(() -> new RuntimeException("Session not found"));
+        String serviceProgress = ticketService.getServiceProgress(sessionId);
+
+        if (serviceProgress == null) {
+            return;
+        }
+
+        Message message = Message.builder()
+                .sessionId(sessionId)
+                .senderId(ROBOT_ID)
+                .senderType(UserType.ROBOT.getValue())
+                .content(serviceProgress)
+                .messageType(MessageType.SERVICE_PROGRESS_CARD.getValue())
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
+        messageRepository.save(message);
+        pushMessageToCustomerAndAgent(session.getCustomerId(), session.getAgentId(), message);
     }
 }

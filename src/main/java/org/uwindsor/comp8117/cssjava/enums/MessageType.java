@@ -9,6 +9,7 @@ public enum MessageType {
     ORDER_CARD("order-card"),
     COMMAND("command"),
     SYSTEM_NOTICE("system-notice"),
+    SERVICE_PROGRESS_CARD("service-progress-card"),
     ;
 
     String value;
