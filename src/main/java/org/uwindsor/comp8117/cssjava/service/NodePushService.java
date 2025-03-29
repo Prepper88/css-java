@@ -48,17 +48,25 @@ public class NodePushService {
         body.put("messageType", message.getMessageType());
         body.put("content", message.getContent());
 
-        ResponseEntity<String> response = HttpUtil.post(CUSTOMER_PUSH_MESSAGE_URL, body);
-        if (!response.getStatusCode().is2xxSuccessful()) {
-            throw new RuntimeException("Failed to send message to customer: " + response.getBody());
+        try {
+            ResponseEntity<String> response = HttpUtil.post(CUSTOMER_PUSH_MESSAGE_URL, body);
+            if (!response.getStatusCode().is2xxSuccessful()) {
+                throw new RuntimeException("Failed to send message to customer: " + response.getBody());
+            }
+        } catch (Exception e) {
+            log.warn("Failed to send message to agent: {}", e.getMessage());
         }
     }
 
     // Notify an agent about a new session
     public void notifyNewSession(SessionView sessionView) {
-        ResponseEntity<String> response = HttpUtil.post(NOTIFY_NEW_SESSION_URL, sessionView);
-        if (!response.getStatusCode().is2xxSuccessful()) {
-            throw new RuntimeException("Failed to notify agent about new session: " + response.getBody());
+        try {
+            ResponseEntity<String> response = HttpUtil.post(NOTIFY_NEW_SESSION_URL, sessionView);
+            if (!response.getStatusCode().is2xxSuccessful()) {
+                throw new RuntimeException("Failed to notify agent about new session: " + response.getBody());
+            }
+        } catch (Exception e) {
+            log.warn("Failed to send message to agent: {}", e.getMessage());
         }
     }
 }

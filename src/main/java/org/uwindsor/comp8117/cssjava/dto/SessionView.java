@@ -2,6 +2,7 @@ package org.uwindsor.comp8117.cssjava.dto;
 
 import lombok.Data;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -16,6 +17,8 @@ public class SessionView {
     private String status;
     private List<Message> messages;
     private OrderCard orderCard;
+    private Long ticketId;
+    private LocalDateTime createdAt;
 
     public Session toSession() {
         Session session = new Session();
@@ -23,9 +26,11 @@ public class SessionView {
         session.setAgentId(agentId);
         session.setCustomerId(customerId);
         session.setStatus(status);
+        session.setCreatedAt(createdAt);
         if (orderCard != null) {
             session.setOrderId(orderCard.getOrderId());
         }
+        session.setTicketId(ticketId);
         return session;
     }
 }

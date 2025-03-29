@@ -56,6 +56,10 @@ public class SessionService {
         return buildSessionView(session, customer, messages, orderCard);
     }
 
+    public Session updateSession(Session session) {
+        return sessionRepository.save(session);
+    }
+
     public SessionView getActiveSessionByCustomerId(long customerId) {
         Session session = sessionRepository.findByCustomerIdAndStatusIn(customerId, List.of(SessionStatus.AGENT_PROCESSING.getValue(), SessionStatus.ROBOT_PROCESSING.getValue())).orElse(null);
         if (session == null) {
@@ -84,6 +88,8 @@ public class SessionService {
         sessionView.setStatus(session.getStatus());
         sessionView.setMessages(messages);
         sessionView.setOrderCard(orderCard);
+        sessionView.setCreatedAt(session.getCreatedAt());
+        sessionView.setTicketId(session.getTicketId());
         return sessionView;
 
     }

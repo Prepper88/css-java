@@ -84,6 +84,7 @@ CREATE TABLE `session` (
   `created_at` datetime(6) DEFAULT NULL,
   `customer_id` bigint DEFAULT NULL,
   `order_id` varchar(255) DEFAULT NULL,
+  `ticket_id` bigint DEFAULT NULL,
   `ended_by` varchar(255) DEFAULT NULL,
   `ended_by_id` bigint DEFAULT NULL,
   `status` varchar(255) DEFAULT NULL,
@@ -91,7 +92,7 @@ CREATE TABLE `session` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 DROP TABLE IF EXISTS `orders`;
-create table css_java.orders
+create table orders
 (
     created_at  datetime(6)  null,
     customer_id bigint       null,
@@ -105,6 +106,31 @@ create table css_java.orders
     delivery_status      varchar(255) null
 );
 
+DROP TABLE IF EXISTS `order_field`;
+create table order_field
+(
+    id       bigint auto_increment
+        primary key,
+    name     varchar(255) null,
+    order_id varchar(255) null,
+    type     varchar(255) null,
+    value    varchar(255) null
+);
+
+DROP TABLE IF EXISTS `ticket`;
+create table ticket
+(
+    id                 bigint auto_increment
+        primary key,
+    confirmed_solution varchar(255) null,
+    issue              varchar(255) null,
+    issue_type         varchar(255) null,
+    remark             varchar(255) null,
+    status             varchar(255) null,
+    customer_request       varchar(255) null,
+    session_id       varchar(255) null,
+    created_at         datetime(6)  null
+);
 
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;

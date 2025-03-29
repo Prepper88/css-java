@@ -5,7 +5,14 @@ import lombok.Data;
 @Data
 public class TicketPage {
     // Customer Information
-    private Customer customer;
+    private InfoCard customerInfoCard;
 
     // Order Information
+    private InfoCard orderInfoCard;
+
+    // Order Extra Information
+    private InfoCard extraInfoCard;
+
+    // Ticket Information
+    private Ticket ticket;
 }

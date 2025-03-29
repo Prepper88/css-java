@@ -17,4 +17,5 @@ public class Session {
     private String endedBy;
     private Long endedById;
     private String orderId;
+    private Long ticketId;
 }

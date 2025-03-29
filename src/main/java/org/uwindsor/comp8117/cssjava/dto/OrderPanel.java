@@ -7,5 +7,5 @@ import java.util.List;
 @Data
 public class OrderPanel {
     private OrderCard orderCard;
-    private List<OrderAttribute> orderAttributes;
+    private List<OrderField> orderFields;
 }

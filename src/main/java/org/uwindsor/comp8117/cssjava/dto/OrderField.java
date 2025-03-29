@@ -8,12 +8,12 @@ import lombok.Data;
 
 @Entity
 @Data
-public class OrderAttribute {
+public class OrderField {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private Long name;
+    private String name;
     private String type;
     private String value;
-    private Long orderId;
+    private String orderId;
 }

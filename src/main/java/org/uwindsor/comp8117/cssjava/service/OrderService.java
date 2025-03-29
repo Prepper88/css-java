@@ -4,6 +4,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.uwindsor.comp8117.cssjava.dto.Order;
 import org.uwindsor.comp8117.cssjava.dto.OrderCard;
+import org.uwindsor.comp8117.cssjava.dto.OrderField;
+import org.uwindsor.comp8117.cssjava.repository.OrderFieldRepository;
 import org.uwindsor.comp8117.cssjava.repository.OrderRepository;
 
 import java.util.List;
@@ -12,6 +14,9 @@ import java.util.List;
 public class OrderService {
     @Autowired
     private OrderRepository orderRepository;
+
+    @Autowired
+    private OrderFieldRepository orderFieldRepository;
 
     public List<OrderCard> findOrderCardsByCustomerId(Long customerId) {
         List<Order> orders = orderRepository.findByCustomerId(customerId);
@@ -23,6 +28,10 @@ public class OrderService {
     public OrderCard findOrderCardByOrderId(String orderId) {
         Order order = orderRepository.findByOrderId(orderId);
         return orderToOrderCard(order);
+    }
+
+    public List<OrderField> findOrderFieldsByOrderId(String orderId) {
+        return orderFieldRepository.findOrderFieldByOrderId(orderId);
     }
 
     private OrderCard orderToOrderCard(Order order) {

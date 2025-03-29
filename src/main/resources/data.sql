@@ -48,6 +48,17 @@ LOCK TABLES `orders` WRITE;
 /*!40000 ALTER TABLE `orders` DISABLE KEYS */;
 INSERT INTO css_java.orders (created_at, customer_id, id, image_name, order_id, order_title, price, pay_status, delivery_status) VALUES ('2025-03-27 16:30:53.000000', 1, 1, 'cake.png', '123456789', 'A tasty cake', '134.5', 'paid', 'delivered');
 INSERT INTO css_java.orders (created_at, customer_id, id, image_name, order_id, order_title, price, pay_status, delivery_status) VALUES ('2025-03-28 10:40:12.000000', 1, 2, 'apple.png', '3281923', 'Apples', '23.00', 'unpaid', 'undelivered');
+INSERT INTO css_java.orders (created_at, customer_id, id, image_name, order_id, order_title, price, pay_status, delivery_status) VALUES ('2025-03-29 08:31:47.000000', 1, 3, 'bell.png', '76548762', 'Bell Home Internet', '59.99/Mon.', 'paid', 'undelivered');
+/*!40000 ALTER TABLE `orders` ENABLE KEYS */;
+UNLOCK TABLES;
+
+LOCK TABLES `order_field` WRITE;
+/*!40000 ALTER TABLE `order_field` DISABLE KEYS */;
+INSERT INTO css_java.order_field (id, name, order_id, type, value) VALUES (1, 'Technician Name', '76548762', 'text', 'Bill Jome');
+INSERT INTO css_java.order_field (id, name, order_id, type, value) VALUES (2, 'Technician Phone', '76548762', 'text', '+1 888-555-9999');
+INSERT INTO css_java.order_field (id, name, order_id, type, value) VALUES (3, 'Appointment Time', '76548762', 'text', '2025-03-26 8:00AM - 12:00AM');
+INSERT INTO css_java.order_field (id, name, order_id, type, value) VALUES (4, 'Device Fee', '76548762', 'text', '$100');
+INSERT INTO css_java.order_field (id, name, order_id, type, value) VALUES (5, 'Status', '76548762', 'text', 'uninstalled');
 /*!40000 ALTER TABLE `orders` ENABLE KEYS */;
 UNLOCK TABLES;
 
